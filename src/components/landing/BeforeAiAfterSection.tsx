@@ -13,21 +13,21 @@ type Card = {
 const cards: Card[] = [
   {
     beforeLabel: 'BEFORE',
-    beforeText: '정밀 평면도 분석',
-    afterLabel: 'AI SCAN',
-    afterText: '공간 최적화 시뮬레이션',
+    beforeText: '평면도 분석',
+    afterLabel: 'AI PREVIEW',
+    afterText: '모던 미니멀 거실',
     description:
-      '제공된 평면도를 바탕으로 실제 치수와 구조를 AI가 정밀 분석하여 리모델링 가능 범위를 도출합니다.',
+      '따뜻한 우드 톤과 미니멀 자재를 조합해 깔끔한 거실로 재구성한 AI 시뮬레이션입니다.',
     image: '/demo-render.png',
   },
   {
     beforeLabel: 'BEFORE',
-    beforeText: '구식 거실 구조',
+    beforeText: '기존 거실 구조',
     afterLabel: 'AI PREVIEW',
-    afterText: '모던 미니멀 거실',
+    afterText: '인더스트리얼 라운지',
     description:
-      '동선을 재설계하고 마감재를 교체하여 깔끔한 미니멀 거실로 재구성한 AI 시뮬레이션입니다.',
-    image: '/demo-render.png',
+      '노출 콘크리트 천장과 적벽돌, 빈티지 가죽 소파로 빈티지 인더스트리얼 무드를 연출했습니다.',
+    image: '/demo-render-2.png',
   },
 ];
 
