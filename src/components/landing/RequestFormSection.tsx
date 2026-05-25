@@ -8,6 +8,7 @@ import {
   type BudgetRange,
 } from '../../types/request';
 import { submitRequest } from '../../lib/requests';
+import { useReveal } from '../../hooks/useReveal';
 
 type FormState = {
   name: string;
@@ -17,11 +18,10 @@ type FormState = {
   styleType: StyleType | '';
   budgetRange: BudgetRange | '';
   requestNote: string;
-  consultationTime: string;
   contentAgreement: boolean;
 };
 
-const initialState: FormState = {
+const initial: FormState = {
   name: '',
   phone: '',
   region: '',
@@ -29,33 +29,32 @@ const initialState: FormState = {
   styleType: '',
   budgetRange: '',
   requestNote: '',
-  consultationTime: '',
   contentAgreement: false,
 };
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function RequestFormSection() {
-  const [form, setForm] = useState<FormState>(initialState);
+  const sectionRef = useReveal<HTMLElement>();
+  const [form, setForm] = useState<FormState>(initial);
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((p) => ({ ...p, [key]: value }));
   }
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const list = e.target.files;
     if (!list) return;
-    const arr = Array.from(list);
-    setFiles((prev) => [...prev, ...arr]);
+    setFiles((p) => [...p, ...Array.from(list)]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  function removeFile(idx: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  function removeFile(i: number) {
+    setFiles((p) => p.filter((_, idx) => idx !== i));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -89,12 +88,17 @@ export default function RequestFormSection() {
         styleType: form.styleType as StyleType,
         budgetRange: form.budgetRange as BudgetRange,
         requestNote: form.requestNote,
-        consultationTime: form.consultationTime,
+        consultationTime: '',
         contentAgreement: form.contentAgreement,
         files,
       });
       setStatus('success');
-      window.scrollTo({ top: document.getElementById('request-form')?.offsetTop ?? 0, behavior: 'smooth' });
+      requestAnimationFrame(() => {
+        document.getElementById('request-form')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      });
     } catch (err) {
       console.error(err);
       setErrorMsg('신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
@@ -108,228 +112,213 @@ export default function RequestFormSection() {
 
   return (
     <section
+      ref={sectionRef}
       id="request-form"
-      className="scroll-mt-6 bg-white py-20 md:py-28"
+      className="reveal scroll-mt-6 bg-surface px-5 py-20 md:px-16 md:py-24"
     >
-      <div className="mx-auto max-w-2xl px-6 md:px-8">
-        <div className="mb-10 md:mb-12">
-          <p className="mb-3 text-sm font-medium tracking-wide text-amber-700 md:text-base">
-            무료 AI 미리보기 신청
-          </p>
-          <h2 className="font-bold leading-tight tracking-tight text-3xl text-stone-900 md:text-4xl">
-            5분이면 신청 완료.
-          </h2>
-          <p className="mt-3 text-sm text-stone-600 md:text-base">
-            신청 후 영업일 기준 1~2일 이내에 카카오톡 또는 문자로 결과를
-            안내드립니다.
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-10 text-center">
+          <h3 className="mb-3 font-display text-2xl font-semibold tracking-[-0.01em] text-primary md:text-[32px]">
+            지금 무료 AI 미리보기를 신청하세요
+          </h3>
+          <p className="text-sm text-on-surface-variant md:text-base">
+            전문가의 손길이 닿은 AI 시뮬레이션은 영업일 1~2일 내에 발송됩니다.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Field label="이름" required>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => update('name', e.target.value)}
-              placeholder="홍길동"
-              className={inputCls}
-              required
-            />
-          </Field>
+        {/* 오해 방지 안내 */}
+        <div className="mb-8 flex items-start gap-3 rounded-2xl border border-tertiary-fixed bg-tertiary-fixed/30 px-4 py-3.5 md:px-5 md:py-4">
+          <span
+            className="material-symbols-outlined text-on-tertiary-container"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            info
+          </span>
+          <p className="text-[13px] leading-relaxed text-primary md:text-sm">
+            AI가 즉시 자동 생성하는 서비스가 아닙니다. 신청 후 이레플랜이 직접
+            검토하여{' '}
+            <span className="font-semibold">실제 시공 가능한 방향</span>으로 AI
+            미리보기를 제작해드립니다.
+          </p>
+        </div>
 
-          <Field label="연락처" required hint="결과 안내를 받으실 휴대전화 번호">
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
-              placeholder="010-0000-0000"
-              className={inputCls}
-              required
-            />
-          </Field>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-7 rounded-3xl border border-outline/5 bg-white p-6 shadow-xl transition-all duration-500 hover:shadow-2xl md:p-10"
+        >
+          {/* 이름 + 연락처 */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Field label="이름" required>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => update('name', e.target.value)}
+                placeholder="성함을 입력하세요"
+                className={underlineCls}
+                required
+              />
+            </Field>
+            <Field label="연락처" required>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => update('phone', e.target.value)}
+                placeholder="010-0000-0000"
+                className={underlineCls}
+                required
+              />
+            </Field>
+          </div>
 
-          <Field label="지역" required hint="시·구 단위로 적어주세요">
+          {/* 지역 */}
+          <Field label="지역" required>
             <input
               type="text"
               value={form.region}
               onChange={(e) => update('region', e.target.value)}
-              placeholder="예) 서울 강남구"
-              className={inputCls}
+              placeholder="예: 서울 강남구"
+              className={underlineCls}
               required
             />
           </Field>
 
-          <Field label="리모델링 희망 공간" required>
-            <select
-              value={form.spaceType}
-              onChange={(e) => update('spaceType', e.target.value as SpaceType)}
-              className={inputCls}
-              required
-            >
-              <option value="" disabled>
-                선택해주세요
-              </option>
-              {SPACE_TYPES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="원하는 스타일" required>
-            <select
-              value={form.styleType}
-              onChange={(e) => update('styleType', e.target.value as StyleType)}
-              className={inputCls}
-              required
-            >
-              <option value="" disabled>
-                선택해주세요
-              </option>
-              {STYLE_TYPES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="예산 범위" required>
-            <select
-              value={form.budgetRange}
-              onChange={(e) =>
-                update('budgetRange', e.target.value as BudgetRange)
-              }
-              className={inputCls}
-              required
-            >
-              <option value="" disabled>
-                선택해주세요
-              </option>
-              {BUDGET_RANGES.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field
-            label="사진 또는 평면도"
+          {/* 희망 공간 — 핀 버튼 */}
+          <PillField
+            label="리모델링 희망 공간"
             required
-            hint="여러 장 업로드 가능 (jpg, png, pdf)"
-          >
-            <div className="space-y-3">
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 px-4 py-6 text-sm text-stone-600 transition hover:border-stone-400 hover:bg-stone-100">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"
-                  />
-                </svg>
-                파일 선택하기 또는 끌어다 놓기
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,application/pdf"
-                  onChange={handleFiles}
-                  className="hidden"
-                />
-              </label>
+            options={SPACE_TYPES}
+            value={form.spaceType}
+            onChange={(v) => update('spaceType', v as SpaceType)}
+          />
 
-              {files.length > 0 && (
-                <ul className="space-y-2">
-                  {files.map((f, i) => (
-                    <li
-                      key={`${f.name}-${i}`}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm"
+          {/* 스타일 — 핀 버튼 */}
+          <PillField
+            label="원하는 스타일"
+            required
+            options={STYLE_TYPES}
+            value={form.styleType}
+            onChange={(v) => update('styleType', v as StyleType)}
+          />
+
+          {/* 예산 — 핀 버튼 */}
+          <PillField
+            label="예산 범위"
+            required
+            options={BUDGET_RANGES}
+            value={form.budgetRange}
+            onChange={(v) => update('budgetRange', v as BudgetRange)}
+          />
+
+          {/* 파일 업로드 */}
+          <Field label="사진 또는 평면도" required hint="여러 장 가능 · jpg, png, pdf">
+            <label className="group block cursor-pointer">
+              <div className="rounded-2xl border-2 border-dashed border-outline-variant/60 p-8 text-center transition-all hover:border-on-tertiary-container/60 hover:bg-surface-container-low">
+                <span className="material-symbols-outlined mb-2 text-4xl text-outline-variant transition-colors group-hover:text-on-tertiary-container">
+                  cloud_upload
+                </span>
+                <p className="text-on-surface-variant">
+                  파일을 끌어다 놓거나 클릭하여 업로드
+                </p>
+                <p className="mt-1 text-[12px] text-outline">
+                  PNG, JPG, PDF · 최대 10MB
+                </p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,application/pdf"
+                onChange={handleFiles}
+                className="hidden"
+              />
+            </label>
+
+            {files.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {files.map((f, i) => (
+                  <li
+                    key={`${f.name}-${i}`}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-surface-container-low px-3 py-2 text-sm"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
+                        {f.type === 'application/pdf'
+                          ? 'picture_as_pdf'
+                          : 'image'}
+                      </span>
+                      <span className="truncate text-primary">{f.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="shrink-0 rounded-md px-2 py-1 text-xs text-on-surface-variant hover:bg-surface-container-high"
                     >
-                      <span className="truncate text-stone-700">{f.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(i)}
-                        className="shrink-0 rounded-md px-2 py-1 text-xs text-stone-500 hover:bg-stone-100 hover:text-stone-700"
-                      >
-                        삭제
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                      삭제
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Field>
 
-          <div className="mt-10 border-t border-stone-200 pt-8">
-            <p className="mb-5 text-sm font-medium text-stone-500">
-              선택 입력 (안 적으셔도 괜찮습니다)
-            </p>
+          {/* 추가 요청사항 */}
+          <Field label="추가 요청사항" hint="선택">
+            <textarea
+              value={form.requestNote}
+              onChange={(e) => update('requestNote', e.target.value)}
+              placeholder="특별히 신경 쓰고 싶은 부분이나 궁금한 점을 적어주세요."
+              rows={4}
+              className="w-full rounded-2xl border border-outline-variant/60 bg-transparent px-4 py-3 text-base transition-all duration-300 focus:border-on-tertiary-container focus:outline-none"
+            />
+          </Field>
 
-            <div className="space-y-6">
-              <Field label="추가 요청사항">
-                <textarea
-                  value={form.requestNote}
-                  onChange={(e) => update('requestNote', e.target.value)}
-                  placeholder="예) 펫이 있어서 마감재 추천 부탁드려요"
-                  rows={4}
-                  className={inputCls}
-                />
-              </Field>
-
-              <Field label="상담 가능 시간">
-                <input
-                  type="text"
-                  value={form.consultationTime}
-                  onChange={(e) => update('consultationTime', e.target.value)}
-                  placeholder="예) 평일 저녁 7시 이후"
-                  className={inputCls}
-                />
-              </Field>
-
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-stone-50 p-4">
-                <input
-                  type="checkbox"
-                  checked={form.contentAgreement}
-                  onChange={(e) =>
-                    update('contentAgreement', e.target.checked)
-                  }
-                  className="mt-0.5 h-5 w-5 rounded border-stone-300 text-stone-900 accent-stone-900"
-                />
-                <span className="text-sm leading-relaxed text-stone-700">
-                  개인정보와 주소를 제외한 Before/AI/After 이미지를{' '}
-                  <span className="font-medium">
-                    이레플랜 홍보 콘텐츠로 활용
-                  </span>
-                  하는 것에 동의합니다.
-                </span>
-              </label>
-            </div>
-          </div>
+          {/* 쇼츠 동의 */}
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-surface-container-low p-4">
+            <input
+              type="checkbox"
+              checked={form.contentAgreement}
+              onChange={(e) => update('contentAgreement', e.target.checked)}
+              className="mt-0.5 h-5 w-5 accent-primary"
+            />
+            <span className="text-[13px] leading-relaxed text-on-surface-variant md:text-sm">
+              개인정보와 주소를 제외한 Before/AI/After 이미지를{' '}
+              <span className="font-semibold text-primary">
+                이레플랜 홍보 콘텐츠로 활용
+              </span>
+              하는 것에 동의합니다.
+            </span>
+          </label>
 
           {errorMsg && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="flex items-start gap-2 rounded-xl bg-error-container/50 px-4 py-3 text-sm text-on-error-container">
+              <span className="material-symbols-outlined text-[18px]">
+                warning
+              </span>
               {errorMsg}
-            </div>
+            </p>
           )}
 
           <button
             type="submit"
             disabled={status === 'submitting'}
-            className="flex w-full items-center justify-center rounded-full bg-stone-900 px-6 py-4 text-base font-semibold text-white transition hover:bg-stone-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 md:text-lg"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-5 text-lg font-bold text-on-primary shadow-xl transition-transform hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {status === 'submitting' ? '전송 중…' : '무료 미리보기 신청 완료'}
+            {status === 'submitting' ? (
+              '전송 중…'
+            ) : (
+              <>
+                무료 AI 미리보기 신청하기
+                <span className="material-symbols-outlined">
+                  arrow_forward
+                </span>
+              </>
+            )}
           </button>
 
-          <p className="text-center text-xs text-stone-500">
-            제출 시 개인정보 처리 안내 및 서비스 이용에 동의한 것으로 간주됩니다.
+          <p className="flex items-start gap-2 rounded-xl bg-surface-container-low p-4 text-[12px] leading-relaxed text-on-surface-variant md:text-[13px]">
+            <span className="material-symbols-outlined text-[16px]">info</span>
+            AI 미리보기 이미지는 디자인 방향 제안용이며, 실제 시공 결과는 현장
+            조건, 자재 수급, 예산에 따라 달라질 수 있습니다.
           </p>
         </form>
       </div>
@@ -337,8 +326,8 @@ export default function RequestFormSection() {
   );
 }
 
-const inputCls =
-  'w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 placeholder-stone-400 transition focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10';
+const underlineCls =
+  'field-underline w-full border-0 border-b border-outline-variant bg-transparent py-3 text-base text-primary placeholder-outline transition-all duration-300';
 
 function Field({
   label,
@@ -352,15 +341,62 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label className="mb-2 flex items-baseline justify-between">
-        <span className="text-sm font-medium text-stone-800">
+    <div className="space-y-2 group">
+      <label className="flex items-center justify-between">
+        <span className="font-display text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant md:text-[12px]">
           {label}
-          {required && <span className="ml-1 text-red-500">*</span>}
+          {required && (
+            <span className="ml-1 text-error">*</span>
+          )}
         </span>
-        {hint && <span className="text-xs text-stone-500">{hint}</span>}
+        {hint && (
+          <span className="text-[11px] text-outline">{hint}</span>
+        )}
       </label>
       {children}
+    </div>
+  );
+}
+
+function PillField<T extends string>({
+  label,
+  required,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  required?: boolean;
+  options: readonly T[];
+  value: T | '';
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <label className="block font-display text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant md:text-[12px]">
+        {label}
+        {required && <span className="ml-1 text-error">*</span>}
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onChange(opt)}
+              className={
+                'rounded-full px-4 py-2 text-[13px] transition-all md:text-sm ' +
+                (active
+                  ? 'border border-primary bg-primary text-on-primary'
+                  : 'border border-outline-variant text-on-surface-variant hover:border-primary hover:bg-primary/5')
+              }
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -369,50 +405,39 @@ function CompletionView() {
   return (
     <section
       id="request-form"
-      className="scroll-mt-6 bg-white py-20 md:py-28"
+      className="scroll-mt-6 bg-surface px-5 py-20 md:px-16 md:py-24"
     >
-      <div className="mx-auto max-w-2xl px-6 md:px-8">
-        <div className="rounded-2xl border border-stone-200 bg-stone-50 p-8 text-center md:p-12">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-stone-900 text-white">
-            <svg
-              className="h-8 w-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-3xl border border-outline/5 bg-white p-8 text-center shadow-xl md:p-12">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-on-primary">
+            <span className="material-symbols-outlined text-[36px]">
+              check
+            </span>
           </div>
 
-          <h2 className="text-2xl font-bold text-stone-900 md:text-3xl">
+          <h2 className="font-display text-2xl font-bold text-primary md:text-3xl">
             신청이 완료되었습니다.
           </h2>
 
-          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-stone-700 md:text-base">
-            보내주신 사진과 평면도를 확인한 뒤,
+          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-on-surface-variant md:text-base">
+            보내주신 사진과 평면도를 확인한 뒤
             <br />
             실제 시공 가능한 방향으로
             <br />
-            AI 리모델링 미리보기를 제작해드립니다.
+            AI 미리보기를 제작해드립니다.
           </p>
 
-          <p className="mt-5 text-sm text-stone-600">
-            결과는 <span className="font-semibold">카카오톡 또는 문자</span>로
-            안내드리겠습니다.
-          </p>
-
-          <div className="mt-8 rounded-xl bg-white p-4 text-left">
-            <p className="text-xs leading-relaxed text-stone-500 md:text-sm">
-              AI 이미지는 디자인 방향 제안용이며,
-              <br />
-              실제 시공은 현장 조건, 자재 수급, 예산에 따라 조정될 수 있습니다.
-            </p>
+          <div className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full bg-secondary-container px-4 py-2 text-sm text-on-secondary-container">
+            <span className="material-symbols-outlined text-[18px]">
+              chat
+            </span>
+            결과는 카카오톡 또는 문자로 안내드리겠습니다.
           </div>
+
+          <p className="mt-8 rounded-2xl bg-surface-container-low p-4 text-left text-[12px] leading-relaxed text-on-surface-variant md:text-[13px]">
+            AI 이미지는 디자인 방향 제안용이며, 실제 시공은 현장 조건, 자재
+            수급, 예산에 따라 조정될 수 있습니다.
+          </p>
         </div>
       </div>
     </section>

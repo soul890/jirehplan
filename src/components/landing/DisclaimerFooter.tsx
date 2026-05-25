@@ -1,19 +1,49 @@
 export default function DisclaimerFooter() {
   return (
-    <footer className="border-t border-stone-200 bg-stone-50 pb-24 pt-12 md:pb-12">
-      <div className="mx-auto max-w-3xl px-6 md:px-8">
-        <div className="rounded-xl border border-stone-200 bg-white p-5 md:p-6">
-          <p className="text-xs leading-relaxed text-stone-500 md:text-sm">
-            AI 미리보기 이미지는 디자인 방향 제안용입니다.
-            <br />
-            실제 시공 결과는 현장 조건, 기존 구조, 자재 수급, 예산에 따라 달라질
-            수 있습니다.
-          </p>
+    <footer className="border-t border-outline/10 bg-surface-container-highest px-5 py-16 pb-28 text-center md:px-16 md:py-20 md:pb-20">
+      <div className="mx-auto max-w-[1280px] space-y-6">
+        <div className="flex items-center justify-center gap-2">
+          <span
+            className="material-symbols-outlined text-primary"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            architecture
+          </span>
+          <h4 className="font-display text-xl font-bold tracking-tight text-primary md:text-2xl">
+            이레플랜 <span className="text-on-tertiary-container">AI</span>
+          </h4>
         </div>
 
-        <div className="mt-8 flex flex-col items-start justify-between gap-2 text-xs text-stone-400 md:flex-row md:items-center">
-          <p>© {new Date().getFullYear()} (주)이레플랜. All rights reserved.</p>
-          <p>이레플랜 AI 리모델링 · 상담 신청 페이지</p>
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+          <a
+            href="#"
+            className="font-display text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant transition-all hover:text-primary"
+          >
+            Privacy Policy
+          </a>
+          <a
+            href="#"
+            className="font-display text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant transition-all hover:text-primary"
+          >
+            Terms of Service
+          </a>
+          <a
+            href="#"
+            className="font-display text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant transition-all hover:text-primary"
+          >
+            AI Ethics
+          </a>
+        </div>
+
+        <p className="mx-auto max-w-lg text-sm leading-relaxed text-on-surface-variant opacity-80">
+          이레플랜은 건축의 정밀함과 인공지능의 효율성을 결합하여 가장 정직한
+          리모델링 솔루션을 제공합니다.
+        </p>
+
+        <div className="border-t border-outline/10 pt-6">
+          <p className="font-display text-[10px] font-bold uppercase tracking-[0.05em] text-outline">
+            © {new Date().getFullYear()} (주)이레플랜. Precision in every pixel.
+          </p>
         </div>
       </div>
     </footer>
