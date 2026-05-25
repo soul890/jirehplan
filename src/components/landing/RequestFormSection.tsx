@@ -35,9 +35,14 @@ export default function RequestFormSection() {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentStepRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
 
-  // 스텝 변경 시 현재 input으로 스크롤
+  // 스텝 변경 시 현재 input으로 스크롤 (단, 초기 마운트는 스킵 — 페이지 진입 시 폼으로 점프 방지)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     currentStepRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
