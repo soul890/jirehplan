@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 상담 신청 컬렉션
+    match /remodeling_requests/{requestId} {
+      // 누구나 신청 생성 가능 (랜딩페이지에서 submit)
+      allow create: if
+        request.resource.data.name is string &&
+        request.resource.data.phone is string &&
+        request.resource.data.region is string &&
+        request.resource.data.spaceType is string &&
+        request.resource.data.styleType is string &&
+        request.resource.data.budgetRange is string &&
+        request.resource.data.status == '접수 완료';
+
+      // 로그인된 관리자만 읽기/수정
+      allow read, update: if request.auth != null;
+
+      // 삭제는 금지 (운영자가 콘솔에서 직접)
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "jirehplan-functions",
+  "version": "1.0.0",
+  "description": "이레플랜 신청 알림 Cloud Functions (이메일 + Google Sheets)",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2",
+    "firebase-functions": "^6.4.0",
+    "googleapis": "^144.0.0",
+    "nodemailer": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
+    "typescript": "^5.7.0"
+  }
+}

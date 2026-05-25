@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 신청 파일들
+    match /requests/{requestId}/{fileName} {
+      // 업로드: 10MB 이하, 이미지/PDF만
+      allow create: if
+        request.resource.size < 10 * 1024 * 1024 &&
+        (request.resource.contentType.matches('image/.*') ||
+         request.resource.contentType == 'application/pdf');
+
+      // 읽기: 로그인된 관리자만 (Storage URL은 토큰으로 보호되긴 함)
+      allow read: if request.auth != null;
+    }
+  }
+}
