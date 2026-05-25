@@ -10,8 +10,9 @@ service firebase.storage {
         (request.resource.contentType.matches('image/.*') ||
          request.resource.contentType == 'application/pdf');
 
-      // 읽기: 로그인된 관리자만 (Storage URL은 토큰으로 보호되긴 함)
-      allow read: if request.auth != null;
+      // 읽기: 누구나 (경로가 timestamp+uuid로 추측 불가능 + 다운로드 토큰 보호)
+      // — 익명 폼 제출 후 getDownloadURL 호출이 동작하려면 필요.
+      allow read: if true;
     }
   }
 }

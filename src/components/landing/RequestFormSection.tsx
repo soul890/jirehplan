@@ -39,6 +39,7 @@ export default function RequestFormSection() {
   const [form, setForm] = useState<FormState>(initial);
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<SubmitStatus>('idle');
+  const [progressMsg, setProgressMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,6 +80,7 @@ export default function RequestFormSection() {
 
     setErrorMsg('');
     setStatus('submitting');
+    setProgressMsg('신청을 처리하는 중…');
     try {
       await submitRequest({
         name: form.name,
@@ -91,6 +93,7 @@ export default function RequestFormSection() {
         consultationTime: '',
         contentAgreement: form.contentAgreement,
         files,
+        onProgress: setProgressMsg,
       });
       setStatus('success');
       requestAnimationFrame(() => {
@@ -103,6 +106,7 @@ export default function RequestFormSection() {
       console.error(err);
       setErrorMsg('신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       setStatus('error');
+      setProgressMsg('');
     }
   }
 
@@ -304,7 +308,10 @@ export default function RequestFormSection() {
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-5 text-lg font-bold text-on-primary shadow-xl transition-transform hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {status === 'submitting' ? (
-              '전송 중…'
+              <>
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-on-primary/30 border-t-on-primary" />
+                {progressMsg || '전송 중…'}
+              </>
             ) : (
               <>
                 무료 AI 미리보기 신청하기
@@ -314,6 +321,12 @@ export default function RequestFormSection() {
               </>
             )}
           </button>
+
+          {status === 'submitting' && (
+            <p className="text-center text-xs text-on-surface-variant md:text-sm">
+              사진 크기에 따라 10~30초 정도 걸릴 수 있어요. 페이지를 닫지 마세요.
+            </p>
+          )}
 
           <p className="flex items-start gap-2 rounded-xl bg-surface-container-low p-4 text-[12px] leading-relaxed text-on-surface-variant md:text-[13px]">
             <span className="material-symbols-outlined text-[16px]">info</span>

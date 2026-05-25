@@ -24,6 +24,7 @@ export type NewRequestInput = Omit<
   'uploadedFiles' | 'status' | 'createdAt' | 'updatedAt'
 > & {
   files: File[];
+  onProgress?: (message: string) => void;
 };
 
 /**
@@ -35,10 +36,15 @@ export async function submitRequest(input: NewRequestInput): Promise<string> {
   const db = getDb();
   const storage = getStorageInstance();
   const requestId = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const total = input.files.length;
 
-  // 1. 파일 업로드
+  // 1. 파일 업로드 (한 장씩, 진행 상황 보고)
   const uploadedFiles: UploadedFile[] = [];
-  for (const file of input.files) {
+  for (let i = 0; i < total; i++) {
+    const file = input.files[i];
+    input.onProgress?.(
+      total > 1 ? `사진 업로드 중… (${i + 1}/${total})` : '사진 업로드 중…'
+    );
     const safeName = file.name.replace(/[^\w.\-가-힣]/g, '_');
     const path = `requests/${requestId}/${safeName}`;
     const storageRef = ref(storage, path);
@@ -52,8 +58,10 @@ export async function submitRequest(input: NewRequestInput): Promise<string> {
   }
 
   // 2. Firestore 저장
-  const { files: _files, ...rest } = input;
+  input.onProgress?.('신청 정보 저장 중…');
+  const { files: _files, onProgress: _onProgress, ...rest } = input;
   void _files;
+  void _onProgress;
   const docRef = await addDoc(collection(db, COLLECTION), {
     ...rest,
     uploadedFiles,
