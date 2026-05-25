@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# 이레플랜 AI 리모델링
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+(주)이레플랜의 AI 리모델링 미리보기 상담 신청 랜딩페이지.
 
-Currently, two official plugins are available:
+고객이 사진/평면도를 업로드하면 운영자가 직접 검토 후 AI 미리보기 이미지를 제작하여 카카오톡/문자로 안내하는 구조입니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+> AI가 자동으로 즉시 생성하는 서비스가 아니라, 전문가 검토를 거쳐 실제 시공 가능한 방향으로 제작합니다.
 
-## React Compiler
+## 라이브
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 프로덕션: https://jirehplan-8904.pages.dev/
 
-## Expanding the ESLint configuration
+## 스택
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: React 19 + Vite + TypeScript
+- **Styling**: Tailwind CSS v4 (Material 3 토큰) + Manrope/Be Vietnam Pro/Pretendard
+- **Backend**: Firebase (Firestore + Storage + Auth)
+- **Cloud Functions**: 이메일 알림 + Google Sheets 동기화 (`firebase-functions/`)
+- **Hosting**: Cloudflare Pages (정적), Firebase (백엔드)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 로컬 개발
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env   # Firebase config 6개 채우기
+npm run dev            # http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 빌드 & 배포
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build                    # dist/ 생성
+firebase deploy --only firestore:rules,storage:rules  # 보안 규칙 배포
+firebase deploy --only functions # Cloud Functions 배포 (Blaze 플랜 필요)
 ```
+
+Cloudflare Pages는 GitHub `main` 브랜치 푸시 시 자동 배포.
+
+## 환경변수
+
+| 키 | 설명 |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | Firebase Web API Key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | `{projectId}.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase 프로젝트 ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | `{projectId}.firebasestorage.app` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | FCM 발신자 ID |
+| `VITE_FIREBASE_APP_ID` | Firebase 앱 ID |
+
+Cloud Functions secrets는 별도 (`firebase functions:secrets:set ...`):
+`GMAIL_USER`, `GMAIL_PASS`, `NOTIFY_EMAIL`, `SHEET_ID`
+
+## 폴더 구조
+
+```
+src/
+├── pages/                # LandingPage, AdminLoginPage, AdminDashboardPage
+├── components/
+│   ├── landing/          # Hero, Service, BeforeAiAfter, HowItWorks, Form, Footer, StickyCta
+│   ├── admin/            # StatusBadge
+│   └── layout/           # Header
+├── hooks/                # useReveal, useStickyAfter
+├── lib/                  # firebase, requests (Firestore/Storage helpers)
+└── types/                # request 도메인 타입
+
+firebase-functions/       # Cloud Functions (이메일 + Sheets)
+public/                   # 정적 자산 (_redirects, demo-render*.png)
+```
+
+## 라우트
+
+- `/` 랜딩페이지 (신청 폼)
+- `/admin/login` 관리자 로그인
+- `/admin` 관리자 대시보드 (Auth 필요)
