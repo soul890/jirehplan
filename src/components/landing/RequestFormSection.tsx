@@ -41,17 +41,55 @@ export default function RequestFormSection() {
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [progressMsg, setProgressMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [pickPending, setPickPending] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((p) => ({ ...p, [key]: value }));
   }
 
+  function addFiles(list: FileList | File[]) {
+    const arr = Array.from(list).filter(
+      (f) =>
+        f.type === 'application/pdf' || f.type.startsWith('image/')
+    );
+    if (arr.length === 0) {
+      setErrorMsg('이미지 또는 PDF 파일만 업로드 가능합니다.');
+      return;
+    }
+    setErrorMsg('');
+    setFiles((p) => [...p, ...arr]);
+  }
+
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    setPickPending(false);
     const list = e.target.files;
-    if (!list) return;
-    setFiles((p) => [...p, ...Array.from(list)]);
+    if (!list || list.length === 0) return;
+    addFiles(list);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(true);
+  }
+  function handleDragLeave() {
+    setDragOver(false);
+  }
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const dropped = e.dataTransfer.files;
+    if (dropped && dropped.length > 0) addFiles(dropped);
+  }
+
+  function openPicker() {
+    setPickPending(true);
+    fileInputRef.current?.click();
+    // 사용자가 picker를 취소해도 onChange 안 일어남.
+    // 잠시 후 pickPending 자동 해제 (UX 보정).
+    window.setTimeout(() => setPickPending(false), 30000);
   }
 
   function removeFile(i: number) {
@@ -214,31 +252,87 @@ export default function RequestFormSection() {
           />
 
           {/* 파일 업로드 */}
-          <Field label="사진 또는 평면도" required hint="여러 장 가능 · jpg, png, pdf">
-            <label className="group block cursor-pointer">
-              <div className="rounded-2xl border-2 border-dashed border-outline-variant/60 p-8 text-center transition-all hover:border-on-tertiary-container/60 hover:bg-surface-container-low">
-                <span className="material-symbols-outlined mb-2 text-4xl text-outline-variant transition-colors group-hover:text-on-tertiary-container">
-                  cloud_upload
-                </span>
-                <p className="text-on-surface-variant">
-                  파일을 끌어다 놓거나 클릭하여 업로드
-                </p>
-                <p className="mt-1 text-[12px] text-outline">
-                  PNG, JPG, PDF · 최대 10MB
-                </p>
-              </div>
+          <Field
+            label="사진 또는 평면도"
+            required
+            hint="여러 장 가능 · jpg, png, pdf"
+          >
+            <div
+              onClick={openPicker}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openPicker();
+                }
+              }}
+              className={
+                'cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all ' +
+                (dragOver
+                  ? 'border-on-tertiary-container bg-tertiary-fixed/30 scale-[1.01]'
+                  : pickPending
+                    ? 'border-on-tertiary-container/60 bg-tertiary-fixed/20'
+                    : 'border-outline-variant/60 hover:border-on-tertiary-container/60 hover:bg-surface-container-low')
+              }
+            >
+              {pickPending ? (
+                <>
+                  <span className="inline-block h-9 w-9 animate-spin rounded-full border-[3px] border-on-tertiary-container/30 border-t-on-tertiary-container" />
+                  <p className="mt-3 text-on-surface-variant">
+                    파일 선택창 여는 중…
+                  </p>
+                  <p className="mt-1 text-[12px] text-outline">
+                    큰 사진은 몇 초 걸릴 수 있어요.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined mb-2 text-4xl text-outline-variant">
+                    cloud_upload
+                  </span>
+                  <p className="text-on-surface-variant">
+                    {dragOver
+                      ? '여기에 놓으세요'
+                      : '파일을 끌어다 놓거나 클릭하여 업로드'}
+                  </p>
+                  <p className="mt-1 text-[12px] text-outline">
+                    PNG, JPG, PDF · 최대 10MB
+                  </p>
+                </>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 accept="image/*,application/pdf"
                 onChange={handleFiles}
-                className="hidden"
+                onClick={(e) => e.stopPropagation()}
+                className="sr-only"
+                aria-label="사진 또는 평면도 업로드"
               />
-            </label>
+            </div>
+
+            {/* 선택된 파일 카운트 (눈에 잘 띄게) */}
+            {files.length > 0 && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-tertiary-fixed/40 px-4 py-2.5 text-sm text-primary">
+                <span
+                  className="material-symbols-outlined text-[20px] text-on-tertiary-container"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  check_circle
+                </span>
+                <span className="font-semibold">
+                  {files.length}개 파일 선택됨
+                </span>
+              </div>
+            )}
 
             {files.length > 0 && (
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-2 space-y-2">
                 {files.map((f, i) => (
                   <li
                     key={`${f.name}-${i}`}
@@ -251,10 +345,16 @@ export default function RequestFormSection() {
                           : 'image'}
                       </span>
                       <span className="truncate text-primary">{f.name}</span>
+                      <span className="shrink-0 text-[11px] text-outline">
+                        {(f.size / 1024 / 1024).toFixed(1)}MB
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeFile(i)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile(i);
+                      }}
                       className="shrink-0 rounded-md px-2 py-1 text-xs text-on-surface-variant hover:bg-surface-container-high"
                     >
                       삭제
