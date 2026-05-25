@@ -9,9 +9,7 @@ service cloud.firestore {
         request.resource.data.name is string &&
         request.resource.data.phone is string &&
         request.resource.data.region is string &&
-        request.resource.data.spaceType is string &&
-        request.resource.data.styleType is string &&
-        request.resource.data.budgetRange is string &&
+        request.resource.data.buildingType is string &&
         request.resource.data.status == '접수 완료';
 
       // 로그인된 관리자만 읽기/수정

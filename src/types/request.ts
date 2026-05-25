@@ -1,5 +1,9 @@
 import type { Timestamp } from 'firebase/firestore';
 
+export const BUILDING_TYPES = ['주거시설', '상업시설'] as const;
+export type BuildingType = (typeof BUILDING_TYPES)[number];
+
+// 이전 폼에서 사용했던 옵션들. 새 폼에서는 안 받지만, 과거 신청 표시 호환을 위해 유지.
 export const SPACE_TYPES = [
   '욕실',
   '주방',
@@ -54,15 +58,18 @@ export type RemodelingRequest = {
   name: string;
   phone: string;
   region: string;
-  spaceType: SpaceType;
-  styleType: StyleType;
-  budgetRange: BudgetRange;
+  buildingType: BuildingType;
   uploadedFiles: UploadedFile[];
 
   // 선택
   requestNote: string;
-  consultationTime: string;
-  contentAgreement: boolean;
+
+  // (legacy) 이전 폼에서 받던 항목 — 과거 신청 호환용. 새 신청에선 빈값.
+  spaceType?: SpaceType | '';
+  styleType?: StyleType | '';
+  budgetRange?: BudgetRange | '';
+  consultationTime?: string;
+  contentAgreement?: boolean;
 
   // 시스템
   status: RequestStatus;

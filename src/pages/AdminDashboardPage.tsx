@@ -130,8 +130,7 @@ export default function AdminDashboardPage() {
                   <th className="px-4 py-3 text-left">이름</th>
                   <th className="px-4 py-3 text-left">연락처</th>
                   <th className="px-4 py-3 text-left">지역</th>
-                  <th className="px-4 py-3 text-left">공간</th>
-                  <th className="px-4 py-3 text-left">예산</th>
+                  <th className="px-4 py-3 text-left">건물</th>
                   <th className="px-4 py-3 text-left">파일</th>
                   <th className="px-4 py-3 text-left">상태</th>
                 </tr>
@@ -198,13 +197,10 @@ function RequestRow({
           {req.region}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-stone-700">
-          {req.spaceType}
+          {req.buildingType || '-'}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-stone-700">
-          {req.budgetRange}
-        </td>
-        <td className="whitespace-nowrap px-4 py-3 text-stone-700">
-          {req.uploadedFiles.length}개
+          {req.uploadedFiles?.length ?? 0}개
         </td>
         <td
           className="whitespace-nowrap px-4 py-3"
@@ -225,18 +221,39 @@ function RequestRow({
       </tr>
       {expanded && (
         <tr className="bg-stone-50">
-          <td colSpan={8} className="px-6 py-5">
+          <td colSpan={7} className="px-6 py-5">
             <div className="grid gap-4 md:grid-cols-2">
-              <DetailItem label="원하는 스타일" value={req.styleType} />
               <DetailItem
-                label="상담 가능 시간"
-                value={req.consultationTime || '-'}
+                label="건물 종류"
+                value={req.buildingType || '-'}
               />
               <DetailItem
-                label="쇼츠 활용 동의"
-                value={req.contentAgreement ? '동의' : '미동의'}
+                label="현재 상태"
+                value={<StatusBadge status={req.status} />}
               />
-              <DetailItem label="현재 상태" value={<StatusBadge status={req.status} />} />
+
+              {/* 과거 신청 호환용 — 값이 있을 때만 표시 */}
+              {req.spaceType && (
+                <DetailItem label="(이전) 희망 공간" value={req.spaceType} />
+              )}
+              {req.styleType && (
+                <DetailItem label="(이전) 스타일" value={req.styleType} />
+              )}
+              {req.budgetRange && (
+                <DetailItem label="(이전) 예산" value={req.budgetRange} />
+              )}
+              {req.consultationTime && (
+                <DetailItem
+                  label="(이전) 상담 가능 시간"
+                  value={req.consultationTime}
+                />
+              )}
+              {req.contentAgreement !== undefined && (
+                <DetailItem
+                  label="쇼츠 활용 동의"
+                  value={req.contentAgreement ? '동의' : '미동의'}
+                />
+              )}
 
               <div className="md:col-span-2">
                 <p className="mb-1.5 text-xs font-medium text-stone-500">
@@ -252,7 +269,7 @@ function RequestRow({
                   업로드 파일
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  {req.uploadedFiles.map((f, i) => (
+                  {(req.uploadedFiles ?? []).map((f, i) => (
                     <a
                       key={i}
                       href={f.fileUrl}

@@ -32,13 +32,15 @@ type RequestData = {
   name: string;
   phone: string;
   region: string;
-  spaceType: string;
-  styleType: string;
-  budgetRange: string;
+  buildingType: string;
   requestNote?: string;
+  uploadedFiles?: Array<{ fileName: string; fileUrl: string }>;
+  // 과거 신청 호환용 — 새 신청에선 비어있음
+  spaceType?: string;
+  styleType?: string;
+  budgetRange?: string;
   consultationTime?: string;
   contentAgreement?: boolean;
-  uploadedFiles?: Array<{ fileName: string; fileUrl: string }>;
 };
 
 export const notifyOnNewRequest = onDocumentCreated(
@@ -87,11 +89,7 @@ async function sendEmailNotification(id: string, data: RequestData) {
     `이름:       ${data.name}`,
     `연락처:     ${data.phone}`,
     `지역:       ${data.region}`,
-    `희망 공간:  ${data.spaceType}`,
-    `원하는 스타일: ${data.styleType}`,
-    `예산:       ${data.budgetRange}`,
-    `상담 가능 시간: ${data.consultationTime || '-'}`,
-    `쇼츠 활용 동의: ${data.contentAgreement ? '동의' : '미동의'}`,
+    `건물 종류:  ${data.buildingType || '-'}`,
     '',
     '추가 요청사항:',
     `  ${data.requestNote || '-'}`,
@@ -129,7 +127,7 @@ async function appendToSheet(id: string, data: RequestData) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID.value(),
-    range: 'Sheet1!A:L',
+    range: 'Sheet1!A:H',
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [
@@ -139,12 +137,8 @@ async function appendToSheet(id: string, data: RequestData) {
           data.name,
           data.phone,
           data.region,
-          data.spaceType,
-          data.styleType,
-          data.budgetRange,
-          data.consultationTime || '',
+          data.buildingType || '',
           data.requestNote || '',
-          data.contentAgreement ? '동의' : '',
           (data.uploadedFiles ?? []).map((f) => f.fileUrl).join('\n'),
         ],
       ],
