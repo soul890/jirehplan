@@ -166,7 +166,7 @@ export default function RequestFormSection() {
     <section
       ref={sectionRef}
       id="request-form"
-      className="reveal scroll-mt-6 bg-surface-container-low px-4 py-16 md:px-8 md:py-24"
+      className="reveal scroll-mt-20 bg-surface-container-low px-4 py-16 md:px-8 md:py-24"
     >
       <div className="mx-auto max-w-xl">
         {/* 상단 진행 바 */}
@@ -689,7 +689,7 @@ function CompletionView() {
   return (
     <section
       id="request-form"
-      className="scroll-mt-6 bg-surface px-5 py-20 md:px-16 md:py-24"
+      className="scroll-mt-20 bg-surface px-5 py-20 md:px-16 md:py-24"
     >
       <div className="mx-auto max-w-2xl">
         <div className="rounded-3xl border border-outline/5 bg-white p-8 text-center shadow-xl md:p-12">

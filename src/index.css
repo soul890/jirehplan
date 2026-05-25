@@ -65,6 +65,10 @@
   --color-inverse-primary: #c8c6c6;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   background: var(--color-background);
@@ -72,6 +76,12 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
