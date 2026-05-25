@@ -254,7 +254,9 @@ export default function RequestFormSection() {
                   value={form.name}
                   onChange={(v) => update('name', v)}
                   placeholder="홍길동"
-                  autoFocus
+                  // 초기 진입 시엔 autoFocus X (브라우저가 input으로 스크롤하는 거 방지)
+                  // 수정/재진입으로 step 1에 돌아왔을 땐 focus 켜기
+                  autoFocus={!isInitialMount.current}
                   onSubmit={next}
                 />
               </InputCard>
